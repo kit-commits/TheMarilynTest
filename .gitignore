@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+.DS_STORE
+**/.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Netlify
+.netlify/
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Instructor files (never committed)
+reports/
+
+# Claude
+.claude/
+CLAUDE.md

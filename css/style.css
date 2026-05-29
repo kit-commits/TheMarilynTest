@@ -1,0 +1,201 @@
+/* HAP Silly 404 — Styles */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --hap-orange: hsl(28, 90%, 38%);
+  --hap-orange-light: hsl(28, 90%, 95%);
+  --hap-teal: hsl(174, 80%, 28%);
+  --hap-teal-light: hsl(174, 60%, 95%);
+  --hap-brown: hsl(30, 30%, 30%);
+  --hap-brown-light: hsl(30, 30%, 95%);
+  --hap-bg: hsl(30, 20%, 98%);
+  --hap-text: hsl(30, 10%, 20%);
+  --hap-text-muted: hsl(30, 10%, 38%);
+  --hap-border: hsl(30, 15%, 85%);
+  --hap-card-bg: hsl(0, 0%, 100%);
+  --hap-shadow: 0 2px 8px hsl(0, 0%, 0%, 0.08);
+  --hap-radius: 8px;
+  --hap-max-width: 52rem;
+}
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background-color: var(--hap-bg);
+  color: var(--hap-text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Layout */
+
+.container {
+  max-width: var(--hap-max-width);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+header {
+  background-color: var(--hap-card-bg);
+  border-bottom: 3px solid var(--hap-orange);
+  padding: 1.5rem 0;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  color: var(--hap-brown);
+}
+
+header h1 span {
+  color: var(--hap-orange);
+}
+
+header p {
+  color: var(--hap-text-muted);
+  font-size: 0.95rem;
+}
+
+main {
+  padding-bottom: 3rem;
+}
+
+h2 {
+  font-size: 1.3rem;
+  color: var(--hap-brown);
+  margin-bottom: 1rem;
+}
+
+/* Cards */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background-color: var(--hap-card-bg);
+  border: 1px solid var(--hap-border);
+  border-radius: var(--hap-radius);
+  padding: 1.25rem;
+  box-shadow: var(--hap-shadow);
+}
+
+.card h3 {
+  font-size: 1.05rem;
+  color: var(--hap-brown);
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  font-size: 0.9rem;
+  color: var(--hap-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.card a {
+  color: var(--hap-teal);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.card a:hover,
+.card a:focus-visible {
+  text-decoration: underline;
+}
+
+/* Buttons */
+
+.btn {
+  display: inline-block;
+  background-color: var(--hap-orange);
+  color: hsl(0, 0%, 100%);
+  border: none;
+  border-radius: var(--hap-radius);
+  padding: 0.6rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  background-color: hsl(28, 90%, 32%);
+}
+
+.btn-secondary {
+  background-color: var(--hap-brown);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+  background-color: hsl(30, 30%, 24%);
+}
+
+/* Figure / image */
+
+.reveal-figure {
+  margin: 1.5rem auto 0;
+  text-align: center;
+}
+
+.reveal-figure img {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  border-radius: 5%;
+}
+
+.reveal-figure figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--hap-text-muted);
+  font-style: italic;
+}
+
+/* Footer */
+
+footer {
+  margin-top: 3rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--hap-border);
+  color: var(--hap-text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Spacing utilities */
+
+.mt-1 {
+  margin-top: 1.25rem;
+}
+
+.mt-2 {
+  margin-top: 1.5rem;
+}
+
+/* Visually hidden (accessible) */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

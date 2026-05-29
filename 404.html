@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 — HAP Can't Find It</title>
+    <meta
+      name="description"
+      content="You found a page that doesn't exist. HAP has thoughts about this."
+    />
+    <meta property="og:title" content="404 — HAP Can't Find It" />
+    <meta
+      property="og:description"
+      content="You found a page that doesn't exist. HAP has thoughts about this."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hap-silly-404.netlify.app/404.html" />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/404.css" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1><span>🟠</span> HAP's Site</h1>
+        <p>Helping you find things. Mostly.</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <p class="error-code">404</p>
+      <h2>Page not found</h2>
+      <p>HAP looked everywhere. It's not here. HAP has feelings about this.</p>
+
+      <div
+        class="roast-box"
+        aria-live="polite"
+        aria-label="HAP's assessment of your navigation skills"
+      >
+        <p class="roast-label">🟠 HAP's assessment</p>
+        <p id="roast-text" class="roast-text loading">Consulting HAP's judgment engine...</p>
+      </div>
+
+      <figure class="hap-pose" id="hap-pose">
+        <img id="hap-img" src="" alt="" loading="eager" width="320" height="320" />
+        <figcaption id="hap-caption"></figcaption>
+      </figure>
+
+      <nav class="error-nav">
+        <a href="/" class="btn">Take me home</a>
+        <button type="button" id="new-roast-btn" class="btn btn-secondary">
+          Generate a new roast
+        </button>
+      </nav>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>HAP's Site &mdash; 404 department &bull; &copy; 2026 Cynthia Teeters</p>
+        <p>
+          <em
+            >HAP&trade; is a trademark of Cynthia Teeters. Illustrations &copy; Cynthia Teeters, all
+            rights reserved. MIT license applies to code only.</em
+          >
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="js/404.mjs"></script>
+  </body>
+</html>
