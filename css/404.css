@@ -65,3 +65,36 @@
   gap: 1rem;
   flex-wrap: wrap;
 }
+
+/* History navigation — browse previous roasts by index */
+
+.history-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn-history {
+  background-color: var(--hap-teal);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+
+.btn-history:hover,
+.btn-history:focus-visible {
+  background-color: hsl(174, 80%, 22%);
+}
+
+.btn-history:disabled {
+  background-color: var(--hap-border);
+  color: var(--hap-text-muted);
+  cursor: not-allowed;
+}
+
+.history-counter {
+  font-size: 0.85rem;
+  color: var(--hap-text-muted);
+  min-width: 3.5rem;
+  text-align: center;
+}
