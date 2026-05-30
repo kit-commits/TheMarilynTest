@@ -10,7 +10,15 @@
  * What this file does:
  *   1. Picks a random HAP pose and shows the image + caption.
  *   2. Fetches a roast from /.netlify/functions/insult and shows it.
- *   3. Wires up the "Generate a new roast" button to repeat both.
+ *   3. Saves every roast + pose to roastHistory (an array).
+ *   4. Wires up the "Generate a new roast" button to repeat 1–3.
+ *   5. Wires up Prev / Next buttons to navigate roastHistory by index.
+ *
+ * Core concepts this file teaches:
+ *   - Arrays  : roastHistory stores every roast generated this session.
+ *   - Indexes : historyIndex points to which entry is currently shown.
+ *   - State   : the array + index together are the application state.
+ *   - Game flow: generate → save → navigate (prev/next) → display.
  */
 
 /**
@@ -144,10 +152,44 @@ const HAP_POSES = [
  *   w_320   — resize to 320 pixels wide
  *   c_limit — never enlarge images that are already smaller than 320px
  *
- * The pose id is appended at request time (see loadPose).
+ * The pose id is appended at request time (see showEntry).
  */
 const CLOUDINARY_BASE =
   "https://res.cloudinary.com/cynthia-teeters/image/upload/f_auto,q_auto,w_320,c_limit/canvas/hap/";
+
+// ─── State ────────────────────────────────────────────────────────────────────
+
+/**
+ * Shape of one history entry — the roast text paired with the pose shown
+ * at the same moment, so browsing back in history shows the original image.
+ * @typedef {Object} HistoryEntry
+ * @property {string}  insult The roast text, with surrounding quotes stripped.
+ * @property {HapPose} pose   The HAP pose shown alongside this roast.
+ */
+
+/**
+ * Every roast generated this session lives here.
+ * Index 0 is the first roast; the last index is the most recent.
+ *
+ * @type {HistoryEntry[]}
+ */
+const roastHistory = [];
+
+/**
+ * Which entry in roastHistory is currently on screen.
+ * -1 means "nothing shown yet" (before the first roast loads).
+ * @type {number}
+ */
+let historyIndex = -1;
+
+/**
+ * True while a fetch is in flight.
+ * Prevents Prev / Next from navigating away before the fetch resolves.
+ * @type {boolean}
+ */
+let isFetching = false;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
  * Pick a random pose from HAP_POSES.
@@ -164,82 +206,135 @@ function pickPose() {
 }
 
 /**
- * Fetch a roast from the serverless function and display it in #roast-text.
+ * Render a single history entry to the DOM.
+ * Does not fetch — everything it needs is already in roastHistory.
  *
- * Marked `async` because we use `await` to wait on two Promises — the
- * fetch itself, then the JSON-parsing of the response body. Wrapping
- * both in try/catch means any failure (network down, server error,
- * malformed JSON) lands in the catch block and shows a friendly
- * fallback message instead of leaving the loading spinner forever.
- *
- * The cache-buster `?t=${Date.now()}` makes each request URL unique,
- * which prevents the browser (or any caching proxy) from returning a
- * cached response and giving the user the same insult twice.
- *
- * @returns {Promise<void>}
+ * @param {number} index - A valid index into roastHistory.
+ * @returns {void}
  */
-async function loadRoast() {
+function showEntry(index) {
+  const entry = roastHistory[index];
+  const img = document.querySelector("#hap-img");
+  const caption = document.querySelector("#hap-caption");
   const roastEl = document.querySelector("#roast-text");
 
-  try {
-    const response = await fetch(`/.netlify/functions/insult?t=${Date.now()}`);
+  /* SECURITY: textContent (not innerHTML) — see loadRoast for explanation. */
+  roastEl.textContent = entry.insult;
+  roastEl.classList.remove("loading");
 
-    /* response.ok is true for any 2xx status. Anything else (404, 500,
-     * 429, etc.) is treated as a failure and falls through to catch. */
-    if (!response.ok) throw new Error(`Status ${response.status}`);
-
-    const data = await response.json();
-
-    /* SECURITY: textContent (not innerHTML) is the safe choice here.
-     * Even if the API ever returned a string containing <script> tags
-     * or HTML, textContent renders it as plain text — no code runs.
-     * Using innerHTML on untrusted data is a classic XSS vulnerability. */
-    roastEl.textContent = data.insult.replace(/^["']+|["']+$/g, "");
-    roastEl.classList.remove("loading");
-  } catch {
-    roastEl.textContent = "HAP tried to think of something clever. The Wi-Fi disagreed.";
-    roastEl.classList.remove("loading");
-  }
+  img.src = `${CLOUDINARY_BASE}${entry.pose.id}`;
+  img.alt = entry.pose.alt;
+  caption.textContent = entry.pose.caption;
 }
 
 /**
- * Pick a pose and update the image and caption elements on the page.
+ * Sync the history navigation bar with the current state.
+ *
+ * - Updates the "X / Y" counter label.
+ * - Enables or disables Prev / Next based on position in the array.
+ * - Shows the nav bar as soon as there is at least one entry.
+ *
  * @returns {void}
  */
-function loadPose() {
-  const pose = pickPose();
-  const img = document.querySelector("#hap-img");
-  const caption = document.querySelector("#hap-caption");
+function updateHistoryNav() {
+  const nav = document.querySelector("#history-nav");
+  const counter = document.querySelector("#history-counter");
+  const prevBtn = document.querySelector("#history-prev-btn");
+  const nextBtn = document.querySelector("#history-next-btn");
 
-  /* Setting img.src triggers the browser to start downloading the image. */
-  img.src = `${CLOUDINARY_BASE}${pose.id}`;
+  if (roastHistory.length === 0) return; /* called before any roast loaded */
 
-  /* ACCESSIBILITY: alt text is required for screen-reader users and
-   * also displays if the image fails to load. Always set it from a
-   * descriptive string, never from the file name. */
-  img.alt = pose.alt;
-  caption.textContent = pose.caption;
+  /* Reveal the nav bar (hidden until the first roast arrives). */
+  nav.hidden = false;
+
+  counter.textContent = `${historyIndex + 1} / ${roastHistory.length}`;
+
+  /* Disable Prev when already at the oldest entry (index 0). */
+  prevBtn.disabled = historyIndex <= 0;
+
+  /* Disable Next when already at the newest entry. */
+  nextBtn.disabled = historyIndex >= roastHistory.length - 1;
 }
 
-/* Run both loaders once on initial page load. */
-loadRoast();
-loadPose();
+// ─── Core flow ────────────────────────────────────────────────────────────────
 
-/* Wire up the "Generate a new roast" button.
+/**
+ * Fetch a fresh roast, pick a pose, save both to roastHistory, then display.
  *
- * addEventListener is the modern way to attach event handlers. It is
- * preferred over inline `onclick="..."` attributes because:
- *   1. It separates JavaScript behavior from HTML markup.
- *   2. It works with strict Content-Security-Policy (no inline JS).
- *   3. Multiple handlers can be attached to the same event.
+ * This is the "generate" step of the game flow.  After it resolves:
+ *   - roastHistory has one more entry (arrays grow with push()).
+ *   - historyIndex points at the new entry (the last index).
+ *   - The DOM shows the new entry.
+ *   - The history nav is updated.
  *
- * The callback uses an arrow function `() => { ... }`, which is a
- * shorter syntax for an anonymous function.
+ * @returns {Promise<void>}
  */
-document.querySelector("#new-roast-btn").addEventListener("click", () => {
+async function generate() {
   const roastEl = document.querySelector("#roast-text");
   roastEl.textContent = "Consulting HAP's judgment engine...";
   roastEl.classList.add("loading");
-  loadRoast();
-  loadPose();
+
+  isFetching = true;
+  const pose = pickPose();
+
+  let insult;
+  try {
+    /* The cache-buster ?t= makes each URL unique so the browser never
+     * returns a cached response and re-shows the same roast. */
+    const response = await fetch(`/.netlify/functions/insult?t=${Date.now()}`);
+
+    /* response.ok is true for any 2xx status. Anything else is a failure. */
+    if (!response.ok) throw new Error(`Status ${response.status}`);
+
+    const data = await response.json();
+    insult = data.insult.replace(/^["']+|["']+$/g, "");
+  } catch {
+    insult = "HAP tried to think of something clever. The Wi-Fi disagreed.";
+  }
+
+  /* Save to history — this is the "push to an array" moment. */
+  roastHistory.push({ insult, pose });
+
+  /* Point historyIndex at the new last entry. */
+  historyIndex = roastHistory.length - 1;
+
+  isFetching = false;
+  showEntry(historyIndex);
+  updateHistoryNav();
+}
+
+// ─── Wiring ───────────────────────────────────────────────────────────────────
+
+/* Generate the first roast on page load. */
+generate();
+
+/* "Generate a new roast" button — always creates a new entry and jumps to it.
+ *
+ * addEventListener is preferred over inline onclick because:
+ *   1. It separates JS behavior from HTML markup.
+ *   2. It works with the enforcing CSP (no inline JS).
+ *   3. Multiple handlers can be attached to the same event.
+ */
+document.querySelector("#new-roast-btn").addEventListener("click", () => {
+  generate();
+});
+
+/* Prev button — step backward through roastHistory. */
+document.querySelector("#history-prev-btn").addEventListener("click", () => {
+  /* Defense-in-depth: the button is disabled at the same boundary, but
+   * guard here too in case JS disables it before the DOM updates, or a
+   * fetch is still in flight. */
+  if (isFetching || historyIndex <= 0) return;
+  historyIndex -= 1;
+  showEntry(historyIndex);
+  updateHistoryNav();
+});
+
+/* Next button — step forward through roastHistory. */
+document.querySelector("#history-next-btn").addEventListener("click", () => {
+  /* Defense-in-depth: same reasoning as the Prev guard above. */
+  if (isFetching || historyIndex >= roastHistory.length - 1) return;
+  historyIndex += 1;
+  showEntry(historyIndex);
+  updateHistoryNav();
 });
